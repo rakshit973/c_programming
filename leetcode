@@ -1,0 +1,619 @@
+bool canBeValid(char *s, char *locked) {
+    int n = strlen(s);
+    if (n % 2 != 0)
+     return false;
+
+    int open = 0, close = 0, unlocked1 = 0, unlocked2 = 0;
+    for (int i = 0; i < n; i++) {
+        if (locked[i] == '0')
+         unlocked1++;
+
+        else if (s[i] == '(')
+         open++;
+
+        else if (s[i] == ')')
+         open--;
+
+        if (open + unlocked1 < 0)
+         return false;
+
+        int j = n - i - 1;
+        if (locked[j] == '0')
+         unlocked2++;
+
+        else if (s[j] == ')')
+         close++;
+
+        else if (s[j] == '(') 
+        close--;
+
+        if (close + unlocked2 < 0)
+         return false;
+    }
+    return true;
+}
+
+long long maxPoints(int** points, int pointsSize, int* pointsColSize) {
+    int rows = pointsSize;
+    int cols = pointsColSize[0];
+    
+    long long *previousRow = (long long*)malloc(sizeof(long long) * cols);
+    long long *currentRow = (long long*)malloc(sizeof(long long) * cols);
+
+    for (int col = 0; col < cols; ++col) {
+        previousRow[col] = points[0][col];
+    }
+
+    for (int row = 1; row < rows; ++row) {
+        long long *leftMax = (long long*)malloc(sizeof(long long) * cols);
+        long long *rightMax = (long long*)malloc(sizeof(long long) * cols);
+
+        leftMax[0] = previousRow[0];
+        for (int col = 1; col < cols; ++col) {
+            leftMax[col] = (leftMax[col - 1] > previousRow[col] + 1) ? leftMax[col - 1] - 1 : previousRow[col];
+        }
+
+        rightMax[cols - 1] = previousRow[cols - 1];
+        for (int col = cols - 2; col >= 0; --col) {
+            rightMax[col] = (rightMax[col + 1] > previousRow[col] + 1) ? rightMax[col + 1] - 1 : previousRow[col];
+        }
+
+        for (int col = 0; col < cols; ++col) {
+            currentRow[col] = points[row][col] + (leftMax[col] > rightMax[col] ? leftMax[col] : rightMax[col]);
+        }
+
+        free(leftMax);
+        free(rightMax);
+
+        long long *temp = previousRow;
+        previousRow = currentRow;
+        currentRow = temp;
+    }
+
+    long long maxPoints = LLONG_MIN;
+    for (int col = 0; col < cols; ++col) {
+        if (previousRow[col] > maxPoints) {
+            maxPoints = previousRow[col];
+        }
+    }
+
+    free(previousRow);
+    free(currentRow);
+
+    return maxPoints;
+}
+
+
+int nthUglyNumber(int n) {
+    int ugly[n]; 
+    ugly[0] = 1;
+    
+    int i2 = 0, i3 = 0, i5 = 0;
+    
+    for (int i = 1; i < n; i++) {
+        int next2 = ugly[i2] * 2;
+        int next3 = ugly[i3] * 3;
+        int next5 = ugly[i5] * 5;
+        
+        int next_ugly = (next2 < next3) ? 
+                        ((next2 < next5) ? next2 : next5) : 
+                        ((next3 < next5) ? next3 : next5);
+        
+        ugly[i] = next_ugly;
+        
+        if (next_ugly == next2) i2++;
+        if (next_ugly == next3) i3++;
+        if (next_ugly == next5) i5++;
+    }
+    
+    return ugly[n-1];
+}
+
+//C Code
+int minSteps(int n) {
+    int op = 0;
+        for (int i = 2; i <= n; ++i){
+            while(n % i == 0){
+                op += i;
+                n /= i;
+            }
+        }
+        return op;
+}
+
+
+//C Code
+int stoneGameRC(int n, int *rightSum, int i, int m, int dp[n][n]) {
+    int x, j, ans, maxAns = 0;
+    if (i == n)
+        return 0;
+    if (i + 2 * m >= n)
+        return rightSum[i];
+    if (dp[i][m])
+        return dp[i][m];
+    for (j = 1; j <= 2 * m; ++j) {
+        if (j < m)
+            x = m;
+        else
+            x = j;
+        ans = rightSum[i] - stoneGameRC(n, rightSum, i + j, x, dp);
+        if (ans > maxAns)
+            maxAns = ans;
+    }
+    return dp[i][m] = maxAns;
+}
+
+int stoneGameII(int* piles, int pilesSize) {
+    int i, n = pilesSize, rightSum[n], dp[n][n];
+    memset(dp, 0, sizeof(dp));
+    rightSum[n - 1] = piles[n - 1];
+    for (i = n - 2; i >= 0; --i) {
+        rightSum[i] = piles[i] + rightSum[i + 1];
+    }
+    return stoneGameRC(n, rightSum, 0, 1, dp);
+}
+
+
+int strangePrinter(const char* s);
+int Util(int i, int j, const char* s, int** dp);
+int strangePrinter(const char* s) {
+    int n = strlen(s);
+    int** dp = (int**)malloc(n * sizeof(int*));
+    for (int i = 0; i < n; i++) {
+        dp[i] = (int*)malloc(n * sizeof(int));
+        for (int j = 0; j < n; j++) {
+            dp[i][j] = -1;
+        }
+    }
+    int result = Util(0, n - 1, s, dp);
+    for (int i = 0; i < n; i++) {
+        free(dp[i]);
+    }
+    free(dp);
+
+    return result;
+}
+int Util(int i, int j, const char* s, int** dp) {
+    if (i > j) {
+        return 0;
+    }
+    if (dp[i][j] != -1) {
+        return dp[i][j];
+    }
+    char firstLetter = s[i];
+    int answer = 1 + Util(i + 1, j, s, dp);
+    for (int k = i + 1; k <= j; k++) {
+        if (s[k] == firstLetter) {
+            int betterAnswer = Util(i, k - 1, s, dp) + Util(k + 1, j, s, dp);
+            if (betterAnswer < answer) {
+                answer = betterAnswer;
+            }
+        }
+    }
+    dp[i][j] = answer;
+    return answer;
+}
+
+
+//C Code
+int findComplement(int num) {
+    int m = num;
+    int mask = 0;
+    if(num == 0)
+        return 1;
+    
+    while(m != 0){
+        mask = (mask << 1) | 1;
+        m = m >> 1;
+    }
+    int ans = (~num) & mask;
+    return ans;
+}
+
+char* fractionAddition(char* expression) {
+    int i, n = 0;
+    for(i = 0; expression[i]; i++)
+        if(expression[i] == '/') n++;
+
+    struct Fraction{
+        int numer, denom;
+    } *fractions = (struct Fraction*)malloc(sizeof(struct Fraction) * n);
+
+    fractions[0].numer = 0, fractions[0].denom = 0;
+    bool flip, neg;
+    for(i = 0, n = 0, flip = 0, neg = 0; expression[i]; i++){
+        if(expression[i] == '-'){
+            if(i > 0) n++;
+            fractions[n].numer = 0, fractions[n].denom = 0;
+            flip = 0, neg = 1;
+        }
+        else if(expression[i] == '+'){
+            if(i > 0) n++;
+            fractions[n].numer = 0, fractions[n].denom = 0;
+            flip = 0, neg = 0;
+        }
+        else if(expression[i] == '/') flip = 1;
+        else{
+            if(flip)
+                fractions[n].denom = fractions[n].denom * 10 + (expression[i] - '0');
+            else
+                fractions[n].numer = fractions[n].numer * 10 + (neg ? '0' - expression[i] : expression[i] - '0');
+        }
+    }
+
+    int multiplier = 1;
+    for(i = 0, n++; i < n; i++)
+        if(multiplier % fractions[i].denom)
+            multiplier *= fractions[i].denom;
+
+    for(i = 0; i < n; i++)
+        fractions[i].numer *= multiplier / fractions[i].denom, fractions[i].denom = multiplier;
+
+    struct Fraction res = fractions[0];
+    for(i = 1; i < n; i++)
+        res.numer += fractions[i].numer;
+    
+    free(fractions);
+
+    if(res.numer < 0) multiplier = -res.numer < res.denom ? -res.numer : res.denom;
+    else multiplier = res.numer < res.denom ? res.numer : res.denom;
+
+    for(multiplier = multiplier ? multiplier : res.denom; multiplier > 1; multiplier--)
+        if(res.numer % multiplier == 0 && res.denom % multiplier == 0)
+            res.numer /= multiplier, res.denom /= multiplier;
+
+    char *result = (char*)malloc(23);
+
+    i = 0;
+    if(res.numer < 0) result[i++] = '-', res.numer = -res.numer;
+
+    if(res.numer == 0) result[i++] = '0';
+    else{
+        for(multiplier = 1000000000, flip = 0; multiplier > 0; multiplier /= 10){
+            if(flip) result[i++] = (res.numer / multiplier % 10) + '0';
+            else if(res.numer / multiplier) result[i++] = (res.numer / multiplier) + '0', flip = 1;
+        }
+    }
+
+    result[i++] = '/';
+
+    for(multiplier = 1000000000, flip = 0; multiplier > 0; multiplier /= 10){
+        if(flip) result[i++] = (res.denom / multiplier % 10) + '0';
+        else if(res.denom / multiplier) result[i++] = (res.denom / multiplier) + '0', flip = 1;
+    }
+
+    result[i] = '\0';
+    
+    return result;
+}
+
+#define maxN 200
+
+void post(struct TreeNode* root, int* arr, int* idx) {
+    if (root == NULL) {
+        return;
+    }
+    post(root->left, arr, idx);
+    post(root->right, arr, idx);
+    arr[(*idx)++] = root->val;
+}
+
+int* postorderTraversal(struct TreeNode* root, int* returnSize) {
+    int* arr = (int*)malloc(maxN * sizeof(int));
+    int idx = 0;
+    post(root, arr, &idx);
+    *returnSize = idx;
+    return arr;
+}
+
+//RECURSIVE SOLUTION
+// void * postVisit(struct Node* root, int* v, int* index){
+//     if(root==NULL)
+//         return NULL;
+//     for(int i=0;i<root->numChildren; i++)
+//         postVisit(root->children[i],v,index);
+//     v[(*index)++]=root->val;
+//     return NULL;
+    
+// }
+
+//ITERATIVE SOLUTION
+void * postVisit(struct Node* root, int* v, int* index){
+    int i=0, count[1000]={0};
+    struct Node* prev[1000];
+    prev[i++]=NULL;
+    while(root!=NULL){
+        if(root->numChildren == count[i]){
+            v[(*index)++]=root->val;
+            count[i--]=0;
+            root = prev[i];
+        }
+        else{
+            prev[i] = root;
+            root = root->children[count[i++]++];
+        }
+    }
+    return NULL;
+}
+
+int* postorder(struct Node* root, int* returnSize) {
+    int *v = (int*)calloc(10000, sizeof(int)), index=0;
+    postVisit(root, v, &index);
+    *returnSize = index;
+    return v;
+}
+
+int* twoSum(int* nums, int numsSize, int target, int* returnSize){
+*returnSize=2;
+int *returna=(int*)malloc(2*(sizeof(int)));
+for(int i=0;i<numsSize;i++)
+   {
+      for(int j=i+1;j<numsSize;j++)
+         {
+         if(nums[i]+nums[j]==target)
+               {
+                  returna[0]=i;
+                 returna[1]=j;
+              }
+       }
+  }
+return returna;
+}
+
+int search(int** grid1, int** grid2, int row, int col, int rLimit, int cLimit, int* diff) {
+    if(row < 0 || row > rLimit || col < 0 || col > cLimit || grid2[row][col] == 0) return 0;
+    if(grid1[row][col] != grid2[row][col]) (*diff)++;
+    grid2[row][col] = 0;
+    grid1[row][col] = 0;
+
+    search(grid1, grid2, row - 1, col, rLimit, cLimit, diff);
+    search(grid1, grid2, row + 1, col, rLimit, cLimit, diff);
+    search(grid1, grid2, row, col - 1, rLimit, cLimit, diff);
+    search(grid1, grid2, row, col + 1, rLimit, cLimit, diff);
+
+    if(*diff != 0) return 0;
+    else return 1;
+}
+
+int countSubIslands(int** grid1, int grid1Size, int* grid1ColSize, int** grid2, int grid2Size, int* grid2ColSize){
+    int rLimit = grid1Size - 1;
+    int cLimit = *grid1ColSize - 1;
+    int ans = 0;
+    int diff = 0;
+
+    for(int i = 0; i < rLimit + 1; i++) {
+        for(int j = 0; j < cLimit + 1; j++) {
+            if(grid2[i][j] == 1) {
+                if(search(grid1, grid2, i, j, rLimit, cLimit, &diff)) ans++;
+                diff = 0;
+            }
+        }
+    }
+    return ans;
+}
+
+struct path {
+  int dist;
+  int node;
+};
+
+/* Minimum heap where paths will be sorted on distance. */
+struct path_heap {
+  struct path* data;
+  int size;
+  int cap;
+};
+
+void path_heap_init(struct path_heap* obj);
+
+void path_heap_uninit(struct path_heap* obj);
+
+int path_heap_size(const struct path_heap* obj);
+
+struct path path_heap_pop(struct path_heap* obj);
+
+void path_heap_push(struct path_heap* obj, struct path value);
+
+int min_distance(
+    int n,
+    int* edges[],
+    int by_node_paths_idx[],
+    int source,
+    int dest,
+    int target,
+    struct path_heap* heap,
+    int dist_from_source_out[]) {
+  /* Initialise the best to be target + 1 since there is no point continuing
+   * beyond the target. We just want to force an adjustment to the edges. */
+  for (int i = 0; i < n; ++i) {
+    dist_from_source_out[i] = target + 1;
+  }
+
+  path_heap_push(heap, (struct path) {.dist = 0, .node = source});
+  while (path_heap_size(heap)) {
+    struct path curr = path_heap_pop(heap);
+    /* Terminate if we've found a route to the destination */
+    if (curr.node == dest) {
+      return curr.dist;
+    }
+
+    /* Add to the heap any path that produces a smaller, total distance, to this
+     * nodes neighbour. */
+    int first = by_node_paths_idx[curr.node];
+    int last = by_node_paths_idx[curr.node + 1];
+    while (first != last) {
+      int* edge = edges[first++];
+      if (0 > edge[2]) {
+        /* Node has no assigned weight yet and so should be ignored. */
+        continue;
+      }
+
+      const int new_dist = curr.dist + edge[2];
+      int next_node = (curr.node == edge[0]) ? edge[1] : edge[0];
+      if (new_dist < dist_from_source_out[next_node]) {
+        dist_from_source_out[next_node] = new_dist;
+        path_heap_push(heap, (struct path) {.dist = new_dist, .node = next_node});
+      }
+    }
+  }
+
+  return INT_MAX;
+}
+
+int** modifiedGraphEdges(int n, int** edges, int edgesSize, int* edgesColSize, int source, int destination, int target, int* returnSize, int** returnColumnSizes){
+  struct path_heap heap;
+  path_heap_init(&heap);
+
+  int* const dist_from_source = malloc(n * sizeof(*dist_from_source));
+
+  /* Take a copy of the incoming edges so we can modify it, while at the same
+   * time doing a counting sort to group edges by source node.
+   * - ret -> Will hold a copy of each edge
+   * - edges_by_node -> Will hold all edges, grouped by souce node (as each
+   *   edge is undirected, it will appear twice, using each node as a source)
+   * - edges_by_node_range[node] -> Will hold the first index in edges_by_node
+   *   where node is a source
+   * - edges_by_node_range[node + 1] -> Will hold the just past the last index
+   *   in edges_by_node where node is a source.
+   */
+  int** ret = malloc(edgesSize * sizeof(*ret));
+  int** const edges_by_node = malloc(2 * edgesSize * sizeof(*edges_by_node));
+  int* const edges_by_node_range = calloc(n + 1, sizeof(*edges_by_node_range));
+  for (int i = 0; i < edgesSize; ++i) {
+    ret[i] = malloc(3 * sizeof(*ret[i]));
+    memcpy(ret[i], edges[i], *edgesColSize * sizeof(**ret));
+    ++edges_by_node_range[ret[i][0]];
+    ++edges_by_node_range[ret[i][1]];
+  }
+  for (int i = 1; i < n; ++i) {
+    edges_by_node_range[i] += edges_by_node_range[i - 1];
+  }
+  for (int i = 0; i < edgesSize; ++i) {
+    int n1 = ret[i][0];
+    int n2 = ret[i][1];
+    edges_by_node[--edges_by_node_range[n1]] = ret[i];
+    edges_by_node[--edges_by_node_range[n2]] = ret[i];
+  }
+  memset(edges_by_node_range, 0, (n + 1) * sizeof(*edges_by_node_range));
+  for (int i = 0; i < edgesSize; ++i) {
+    ++edges_by_node_range[ret[i][0] + 1];
+    ++edges_by_node_range[ret[i][1] + 1];
+  }
+  for (int i = 1; i <= n; ++i) {
+    edges_by_node_range[i] += edges_by_node_range[i - 1];
+  }
+
+  /* Try and find the minimal distance path without using wildcard edges */
+  bool has_solution = false;
+  int min_dist_to_dest = min_distance(n, edges_by_node, edges_by_node_range, source, destination, target, &heap, dist_from_source);
+  has_solution = (min_dist_to_dest == target);
+  if (min_dist_to_dest >= target) {
+    /* We may already have a solution, in which case we just need to assign
+     * a large weight to each wildcard. The other option is that we need to
+     * reduce min_dist_to_dest. The best thing to do is assign the minimum
+     * weight of 1 of each wildcard edge and try to find the minimum distance
+     * again. If we undershoot target, it is easy to calculate the difference
+     * we need to increase the weight by. After that we just need to give all
+     * other wildcards a large weight. */
+    for (int i = 0; i < edgesSize; ++i) {
+      if (0 <= ret[i][2]) {
+        /* Not a wildcard weight and so there is nothing we can do */
+        continue;
+      }
+
+      if (!has_solution) {
+        /* Set the weight to the smallest possible value first, if we then get
+         * a route that is below target, increase the weight by the difference
+         * to make a solution. */
+        ret[i][2] = 1;
+        min_dist_to_dest = min_distance(n, edges_by_node, edges_by_node_range, source, destination, target, &heap, dist_from_source);
+        if (min_dist_to_dest <= target) {
+          has_solution = true;
+          ret[i][2] += target - min_dist_to_dest;
+        }
+      } else {
+        /* Already have a solution, just want to assign a weight that makes
+         * sure the path is not taken. Set it to target + 1 since
+         * source -> destination must already have minimum weight of target. */
+        ret[i][2] = target + 1;
+      }
+    }
+  }
+
+  if (!has_solution) {
+    /* Remember to return memory allocated to prepare a return since there is
+     * no solution. */
+    for (int i = 0; i < edgesSize; ++i) {
+      free(ret[i]);
+    }
+    free(ret);
+    ret = NULL;
+    *returnSize = 0;
+    *returnColumnSizes = NULL;
+  } else {
+    /* There is a solution, so we need to fill out the rest of the return
+     * parameters. */
+    *returnSize = edgesSize;
+    *returnColumnSizes = malloc(*returnSize * sizeof(**returnColumnSizes));
+    for (int i = 0; i < edgesSize; ++i) {
+      (*returnColumnSizes)[i] = 3;
+    }
+  }
+
+  path_heap_uninit(&heap);
+  free(dist_from_source);
+  free(edges_by_node);
+  free(edges_by_node_range);
+
+  return ret;
+}
+
+void path_heap_init(struct path_heap* obj) {
+  memset(obj, 0, sizeof(*obj));
+}
+
+void path_heap_uninit(struct path_heap* obj) {
+  free(obj->data);
+}
+
+int path_heap_size(const struct path_heap* obj) {
+  return obj->size;
+}
+
+struct path path_heap_pop(struct path_heap* obj) {
+  struct path ret = obj->data[0];
+  --obj->size;
+  int idx = 0;
+  for (;;) {
+    const int left = idx * 2 + 1;
+    const int right = idx * 2 + 2;
+    int to_move = obj->size;
+    if (left < obj->size && obj->data[left].dist < obj->data[to_move].dist) {
+      to_move = left;
+    }
+    if (right < obj->size && obj->data[right].dist < obj->data[to_move].dist) {
+      to_move = right;
+    }
+    if (to_move == obj->size) {
+      break;
+    }
+    obj->data[idx] = obj->data[to_move];
+    idx = to_move;
+  }
+  obj->data[idx] = obj->data[obj->size];
+  return ret;
+}
+
+void path_heap_push(struct path_heap* obj, struct path value) {
+  if (obj->size == obj->cap) {
+    obj->cap = (obj->cap) ? obj->cap * 2 : 8;
+    obj->data = realloc(obj->data, obj->cap * sizeof(*obj->data));
+  }
+
+  int idx = obj->size++;
+  while (idx && obj->data[(idx - 1) / 2].dist > value.dist) {
+    obj->data[idx] = obj->data[(idx - 1) / 2];
+    idx = (idx - 1) / 2;
+  }
+  obj->data[idx] = value;
+}
